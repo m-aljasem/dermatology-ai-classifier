@@ -24,7 +24,7 @@ wheels/
 venv/
 env/
 ENV/
-ai_outputs/
+junk_code/
 # IDEs
 .vscode/
 .idea/
