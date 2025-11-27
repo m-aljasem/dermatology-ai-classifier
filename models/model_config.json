@@ -1,0 +1,13 @@
+{
+  "input_shape": [
+    250,
+    250,
+    3
+  ],
+  "num_classes": 7,
+  "batch_size": 32,
+  "architecture": "Custom CNN",
+  "training_epochs": 15,
+  "final_accuracy": 0.7615230679512024,
+  "development_accuracy": 0.7686116700201208
+}

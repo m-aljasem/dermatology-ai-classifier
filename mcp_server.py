@@ -32,12 +32,12 @@ app = Server("skin-cancer-mcp-server")
 
 # Paths
 MODELS_DIR = Path("models")
-MODEL_PATH = MODELS_DIR / "skin_cancer_model.h5"
+MODEL_PATH = MODELS_DIR / "skin_cancer_model.keras"
 
 # Global model
 model = None
 CLASSES = ['akiec', 'bcc', 'bkl', 'df', 'mel', 'nv', 'vasc']
-INPUT_SHAPE = (224, 224, 3)
+INPUT_SHAPE = (250, 250, 3)
 
 def load_model():
     """Load TensorFlow model."""

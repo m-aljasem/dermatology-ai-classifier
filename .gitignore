@@ -39,6 +39,8 @@ junk_code/
 # Data
 data/
 *.csv
+!docs/*.csv
+!models/*.csv
 *.h5
 *.hdf5
 *.pkl
@@ -49,12 +51,15 @@ data/
 *.tflite
 *.onnx
 
-# Models
+# Models (large files - tracked via Git LFS)
 models/*.h5
 models/*.pth
 models/*.pb
 models/*.onnx
 !models/.gitkeep
+# Allow small config files
+!models/*.json
+# Note: .keras files are tracked via Git LFS (see .gitattributes)
 
 # Logs
 logs/

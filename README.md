@@ -91,7 +91,7 @@ python src/train.py
 Once data loading is implemented, this will save best weights to:
 
 ```text
-models/skin_cancer_model.h5
+models/skin_cancer_model.keras
 ```
 
 ### 2️⃣ Run the Streamlit App
@@ -111,26 +111,50 @@ Upload a dermatoscopic image and receive:
 
 ### 🌐 Web App
 
+**Clone and run:**
+
 ```bash
+# Clone repository
+git clone https://github.com/m-aljasem/dermatology-ai-classifier.git
+cd dermatology-ai-classifier
+
+# Install Git LFS (if not already installed)
+git lfs install
+
+# Pull large files (model)
+git lfs pull
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the app
 streamlit run app.py
 ```
 
 The app:
 
-- Builds the CNN model
-- Loads `models/skin_cancer_model.h5` if present
-- Outputs class name + clinical description + confidence
+- Loads `models/skin_cancer_model.keras` (included via Git LFS)
+- Provides AI-powered classification
+- Includes ABCDE risk assessment
+- Shows explainability visualizations
+
+> **Note:** The model file (~50-200 MB) is included via Git LFS. After cloning, run `git lfs pull` to download it. See [SETUP_GIT_LFS.md](SETUP_GIT_LFS.md) for details.
 
 ### 🧬 Programmatic Usage
 
 ```python
-from src.model import build_skin_cancer_model
+from src.model import build_skin_lesion_cnn
+import tensorflow as tf
 import numpy as np
 
-model = build_skin_cancer_model()
-model.load_weights("models/skin_cancer_model.h5")  # after training
+# Load full model from .keras file (recommended)
+model = tf.keras.models.load_model("models/skin_cancer_model.keras")
 
-# img_preprocessed: (1, 224, 224, 3) in [0,1]
+# Or build and load weights
+# model = build_skin_lesion_cnn(input_shape=(250, 250, 3), num_classes=7)
+# model.load_weights("models/skin_cancer_model.keras")
+
+# img_preprocessed: (1, 250, 250, 3) in [0,1]
 pred = model.predict(img_preprocessed, verbose=0)[0]
 class_idx = np.argmax(pred)
 confidence = pred[class_idx]
@@ -147,7 +171,7 @@ dermatology-ai-classifier/
 ├── data/                     # HAM10000 metadata + images
 ├── docs/
 ├── experiments/
-├── models/                   # Saved weights (skin_cancer_model.h5)
+├── models/                   # Saved models (skin_cancer_model.keras)
 ├── notebooks/
 ├── scripts/
 ├── src/
@@ -170,21 +194,21 @@ dermatology-ai-classifier/
 
 ---
 
-## 📦 Exported Weights
+## 📦 Exported Models
 
 - Training script saves to:
 
 ```text
-../models/skin_cancer_model.h5
+../models/skin_cancer_model.keras
 ```
 
 - Streamlit app loads from:
 
 ```text
-models/skin_cancer_model.h5
+models/skin_cancer_model.keras
 ```
 
-You can ship the `models/` folder with any deployment.
+You can ship the `models/` folder with any deployment. The `.keras` format is the modern TensorFlow/Keras format that saves the complete model including architecture, weights, and optimizer state.
 
 ---
 
@@ -501,7 +525,7 @@ To use with Claude Desktop, add this to your MCP configuration file:
 ```json
 {
   "model_type": "TensorFlow/Keras",
-  "model_path": "models/model.h5",
+  "model_path": "models/model.keras",
   "classes": ["Class1", "Class2"],
   "description": "Model description"
 }

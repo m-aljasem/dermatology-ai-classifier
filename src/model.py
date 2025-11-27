@@ -35,40 +35,56 @@ def build_skin_cancer_model(input_shape=(224, 224, 3), num_classes=7):
     return model
 
 
-def build_original_model(input_shape=(250, 250, 3), num_classes=7):
-    """Build original CNN model architecture from main.ipynb."""
-    model = Sequential()
+def build_skin_lesion_cnn(input_shape=(250, 250, 3), num_classes=7):
+    """
+    Build a custom CNN for skin lesion classification.
     
-    # Layer one
-    model.add(BatchNormalization())
-    model.add(Conv2D(64, kernel_size=(3, 3), input_shape=input_shape))
-    model.add(Activation("relu"))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
+    Architecture matches the notebook implementation.
     
-    # Layer two
-    model.add(Conv2D(32, kernel_size=(3, 3)))
-    model.add(Activation("relu"))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
+    Args:
+        input_shape: Tuple specifying input image dimensions (height, width, channels)
+        num_classes: Number of output classes
+        
+    Returns:
+        Uncompiled Keras Sequential model
+    """
+    model = Sequential(name="SkinLesionCNN")
     
-    # Layer three
-    model.add(Flatten())
-    model.add(Dense(64))
-    model.add(Activation("relu"))
+    # Input normalization layer
+    model.add(BatchNormalization(input_shape=input_shape, name='input_bn'))
     
-    # Layer four
-    model.add(Flatten())
-    model.add(Dense(32))
-    model.add(Activation("relu"))
+    # Convolutional Block 1: Extract low-level features
+    model.add(Conv2D(64, kernel_size=(3, 3), padding='same', name='conv1'))
+    model.add(Activation("relu", name='conv1_relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), name='conv1_pool'))
     
-    # Layer five
-    model.add(Dense(num_classes))
-    model.add(Activation("softmax"))
+    # Convolutional Block 2: Extract mid-level features
+    model.add(Conv2D(32, kernel_size=(3, 3), padding='same', name='conv2'))
+    model.add(Activation("relu", name='conv2_relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), name='conv2_pool'))
     
-    model.compile(
-        loss="categorical_crossentropy",
-        optimizer="adam",
-        metrics=["accuracy"],
-    )
+    # Flatten convolutional features
+    model.add(Flatten(name='flatten'))
+    
+    # Dense Block 1: High-level feature processing
+    model.add(Dense(64, name='dense1'))
+    model.add(Activation("relu", name='dense1_relu'))
+    
+    # Dense Block 2: Final feature refinement
+    model.add(Dense(32, name='dense2'))
+    model.add(Activation("relu", name='dense2_relu'))
+    
+    # Output layer: Multi-class classification
+    model.add(Dense(num_classes, name='output'))
+    model.add(Activation("softmax", name='output_softmax'))
     
     return model
+
+
+def build_original_model(input_shape=(250, 250, 3), num_classes=7):
+    """
+    Alias for build_skin_lesion_cnn for backward compatibility.
+    Use build_skin_lesion_cnn instead.
+    """
+    return build_skin_lesion_cnn(input_shape=input_shape, num_classes=num_classes)
 

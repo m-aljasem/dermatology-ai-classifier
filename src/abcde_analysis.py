@@ -10,7 +10,7 @@ Implements the ABCDE rule for melanoma detection:
 """
 
 import numpy as np
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 from PIL import Image
 import cv2
 
