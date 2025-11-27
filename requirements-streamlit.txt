@@ -10,7 +10,7 @@ matplotlib>=3.7.0
 seaborn>=0.12.0
 
 # Image processing
-opencv-python>=4.8.0
+opencv-python-headless>=4.8.0  # Headless version for cloud (no GUI dependencies)
 scipy>=1.11.0
 
 # Explainability (optional - comment out if not needed)
