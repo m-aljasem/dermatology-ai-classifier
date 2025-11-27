@@ -1,7 +1,5 @@
 # Git LFS configuration for large model files
 *.keras filter=lfs diff=lfs merge=lfs -text
 models/*.keras filter=lfs diff=lfs merge=lfs -text
-
 # Keep small JSON config files as regular files
 *.json !filter !diff !merge text
-
