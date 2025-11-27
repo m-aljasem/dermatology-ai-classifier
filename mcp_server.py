@@ -11,6 +11,10 @@ from pathlib import Path
 import sys
 from typing import Any, Dict, List, Optional
 import numpy as np
+from PIL import Image
+import io
+import base64
+import tensorflow as tf
 
 # MCP SDK
 try:
@@ -32,30 +36,18 @@ MODEL_PATH = MODELS_DIR / "skin_cancer_model.h5"
 
 # Global model
 model = None
+CLASSES = ['akiec', 'bcc', 'bkl', 'df', 'mel', 'nv', 'vasc']
+INPUT_SHAPE = (224, 224, 3)
 
 def load_model():
-    """Load model based on type."""
+    """Load TensorFlow model."""
     global model
     try:
-        if not MODEL_PATH.exists():
-            print(f"⚠️  Model not found at {MODEL_PATH}")
-            return
-        
-        if "tensorflow" == "sklearn":
-            import pickle
-            with open(MODEL_PATH, 'rb') as f:
-                model = pickle.load(f)
-        elif "tensorflow" == "tensorflow":
-            import tensorflow as tf
+        if MODEL_PATH.exists():
             model = tf.keras.models.load_model(str(MODEL_PATH))
-        elif "tensorflow" == "pytorch":
-            import torch
-            from src.model import ECGAttentionModel
-            model = ECGAttentionModel(num_classes=7)
-            model.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device('cpu')))
-            model.eval()
-        
-        print(f"✓ Model loaded from {MODEL_PATH}")
+            print(f"✓ Model loaded from {MODEL_PATH}")
+        else:
+            print(f"⚠️  Model not found at {MODEL_PATH}")
     except Exception as e:
         print(f"Error loading model: {e}")
 
@@ -65,13 +57,13 @@ async def list_tools() -> List[Tool]:
     return [
         Tool(
             name="predict",
-            description="Make a prediction using the Skin Lesion Classification model",
+            description="Make a prediction using the Skin Lesion Classification model. Input should be a file path to an image or base64 encoded image.",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "input": {
                         "type": "string",
-                        "description": "Input data (JSON string or file path)"
+                        "description": "File path to image or base64 encoded image data"
                     }
                 },
                 "required": ["input"]
@@ -120,9 +112,10 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
             )]
         
         info = {
-            "model_type": "tensorflow",
+            "model_type": "TensorFlow/Keras",
             "model_path": str(MODEL_PATH),
-            "classes": ['akiec', 'bcc', 'bkl', 'df', 'mel', 'nv', 'vasc'],
+            "classes": CLASSES,
+            "input_shape": INPUT_SHAPE,
             "description": "Skin Lesion Classification"
         }
         
@@ -143,23 +136,50 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
         try:
             input_data = arguments.get("input", "")
             
-            # Parse input (could be JSON string or file path)
+            # Handle file path or base64 encoded image
             if Path(input_data).exists():
-                with open(input_data, 'r') as f:
-                    data = json.load(f)
+                image = Image.open(input_data)
+            elif input_data.startswith("data:image"):
+                # Base64 encoded image
+                header, encoded = input_data.split(",", 1)
+                image_data = base64.b64decode(encoded)
+                image = Image.open(io.BytesIO(image_data))
             else:
-                data = json.loads(input_data)
+                # Try as base64 string
+                try:
+                    image_data = base64.b64decode(input_data)
+                    image = Image.open(io.BytesIO(image_data))
+                except:
+                    return [TextContent(
+                        type="text",
+                        text=json.dumps({
+                            "error": "Invalid input. Provide file path or base64 encoded image."
+                        }, indent=2)
+                    )]
             
-            # Make prediction based on model type
-            if "tensorflow" == "sklearn":
-                # Handle sklearn prediction
-                result = {"prediction": "sklearn prediction", "data": data}
-            elif "tensorflow" == "tensorflow":
-                # Handle TensorFlow prediction
-                result = {"prediction": "tensorflow prediction", "data": data}
-            elif "tensorflow" == "pytorch":
-                # Handle PyTorch prediction
-                result = {"prediction": "pytorch prediction", "data": data}
+            # Convert to RGB if needed
+            if image.mode != 'RGB':
+                image = image.convert('RGB')
+            
+            # Resize and preprocess
+            image = image.resize(INPUT_SHAPE[:2])
+            img_array = np.array(image) / 255.0
+            img_array = np.expand_dims(img_array, 0)
+            
+            # Predict
+            pred = model.predict(img_array, verbose=0)
+            class_idx = int(np.argmax(pred[0]))
+            confidence = float(pred[0][class_idx])
+            class_name = CLASSES[class_idx]
+            
+            probabilities = {cls: float(prob) for cls, prob in zip(CLASSES, pred[0])}
+            
+            result = {
+                "prediction": class_name,
+                "class_index": class_idx,
+                "confidence": confidence,
+                "probabilities": probabilities
+            }
             
             return [TextContent(
                 type="text",

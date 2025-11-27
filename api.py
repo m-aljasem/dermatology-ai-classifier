@@ -103,7 +103,7 @@ async def predict(file: UploadFile = File(...)):
         img_array = np.expand_dims(img_array, 0)
         
         # Predict
-        if false:
+        if False:
             # Multi-label prediction
             pred = model.predict(img_array, verbose=0)[0]
             detected = []
