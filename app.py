@@ -18,8 +18,8 @@ CLASS_NAMES = {
     'vasc': 'Vascular lesions'
 }
 
-st.set_page_config(page_title="Skin Cancer Classification", page_icon="🩺")
-st.title("🩺 Skin Cancer Classification")
+st.set_page_config(page_title="Dermatology AI Classifier", page_icon="🩺")
+st.title("Dermatology AI Classifier")
 
 MODELS_DIR = Path("models")
 WEIGHTS_PATH = MODELS_DIR / "skin_cancer_model.h5"

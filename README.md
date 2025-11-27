@@ -1,4 +1,4 @@
-# 🩺 Skin Cancer Classification (HAM10000)
+# Dermatology AI Classifier
 
 Convolutional neural network for **classifying 7 types of skin lesions** from dermatoscopic images (HAM10000).
 
@@ -84,7 +84,7 @@ pip install -r requirements-dev.txt
 ### 1️⃣ Train the Model
 
 ```bash
-cd skin-cancer
+cd dermatology-ai-classifier
 python src/train.py
 ```
 
@@ -97,7 +97,7 @@ models/skin_cancer_model.h5
 ### 2️⃣ Run the Streamlit App
 
 ```bash
-cd skin-cancer
+cd dermatology-ai-classifier
 streamlit run app.py
 ```
 
@@ -141,7 +141,7 @@ confidence = pred[class_idx]
 ## 🗂 Project Structure
 
 ```text
-skin-cancer/
+dermatology-ai-classifier/
 ├── app.py                    # Streamlit app
 ├── config/
 ├── data/                     # HAM10000 metadata + images
