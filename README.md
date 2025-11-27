@@ -1,0 +1,202 @@
+# 🩺 Skin Cancer Classification (HAM10000)
+
+Convolutional neural network for **classifying 7 types of skin lesions** from dermatoscopic images (HAM10000).
+
+![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.13%2B-orange.svg)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-ff4b4b.svg)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+
+---
+
+## 👤 Author
+
+- **Name**: Mohamad AlJasem, MD MPH MSc  
+- **Email**: [mohamad@aljasem.eu.org](mailto:mohamad@aljasem.eu.org)  
+- **GitHub**: [github.com/m-aljasem](https://github.com/m-aljasem)  
+- **Website**: [aljasem.eu.org](https://aljasem.eu.org)
+
+---
+
+## 📋 Table of Contents
+
+- [Overview](#-overview)
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Installation](#-installation)
+- [Quick Start](#-quick-start)
+- [Usage](#-usage)
+- [Project Structure](#-project-structure)
+- [Classes](#-classes)
+- [Exported Weights](#-exported-weights)
+- [License](#-license)
+- [Disclaimer](#-disclaimer)
+
+---
+
+## 🎯 Overview
+
+This project trains a **CNN classifier** on the **HAM10000** dataset to differentiate between **7 skin lesion types**, including melanoma and benign lesions.
+
+It provides:
+
+- A custom CNN architecture
+- A Streamlit app for image‑based diagnosis assistance
+- Exported weights for deployment
+
+> ⚠️ **Not a diagnostic tool** – for research & education only.
+
+---
+
+## ✨ Features
+
+- 7‑class softmax classifier
+- Input resolution: **224×224 RGB**
+- Data augmentation (via training script, once wired)
+- Confidence scores for each lesion type
+
+---
+
+## 🛠 Tech Stack
+
+- Python 3.8+
+- TensorFlow / Keras
+- Streamlit
+
+---
+
+## 📦 Installation
+
+```bash
+pip install -r requirements.txt
+```
+
+Dev tools:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+---
+
+## 🚀 Quick Start
+
+### 1️⃣ Train the Model
+
+```bash
+cd skin-cancer
+python src/train.py
+```
+
+Once data loading is implemented, this will save best weights to:
+
+```text
+models/skin_cancer_model.h5
+```
+
+### 2️⃣ Run the Streamlit App
+
+```bash
+cd skin-cancer
+streamlit run app.py
+```
+
+Upload a dermatoscopic image and receive:
+- Predicted lesion type
+- Confidence score
+
+---
+
+## 🧑‍💻 Usage
+
+### 🌐 Web App
+
+```bash
+streamlit run app.py
+```
+
+The app:
+
+- Builds the CNN model
+- Loads `models/skin_cancer_model.h5` if present
+- Outputs class name + clinical description + confidence
+
+### 🧬 Programmatic Usage
+
+```python
+from src.model import build_skin_cancer_model
+import numpy as np
+
+model = build_skin_cancer_model()
+model.load_weights("models/skin_cancer_model.h5")  # after training
+
+# img_preprocessed: (1, 224, 224, 3) in [0,1]
+pred = model.predict(img_preprocessed, verbose=0)[0]
+class_idx = np.argmax(pred)
+confidence = pred[class_idx]
+```
+
+---
+
+## 🗂 Project Structure
+
+```text
+skin-cancer/
+├── app.py                    # Streamlit app
+├── config/
+├── data/                     # HAM10000 metadata + images
+├── docs/
+├── experiments/
+├── models/                   # Saved weights (skin_cancer_model.h5)
+├── notebooks/
+├── scripts/
+├── src/
+│   ├── __init__.py
+│   └── model.py              # build_skin_cancer_model()
+└── tests/
+```
+
+---
+
+## 🧬 Classes
+
+- **akiec** – Actinic keratoses and intraepithelial carcinoma  
+- **bcc** – Basal cell carcinoma  
+- **bkl** – Benign keratosis‑like lesions  
+- **df** – Dermatofibroma  
+- **mel** – Melanoma  
+- **nv** – Melanocytic nevi  
+- **vasc** – Vascular lesions  
+
+---
+
+## 📦 Exported Weights
+
+- Training script saves to:
+
+```text
+../models/skin_cancer_model.h5
+```
+
+- Streamlit app loads from:
+
+```text
+models/skin_cancer_model.h5
+```
+
+You can ship the `models/` folder with any deployment.
+
+---
+
+## 📄 License
+
+Licensed under the **MIT License**.  
+See `LICENSE` for details.
+
+---
+
+## 🏥 Disclaimer
+
+> This model is intended for **research and educational use only**.  
+> It must **not** be used for clinical diagnosis or patient management.
+
