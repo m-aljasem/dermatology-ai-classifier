@@ -173,36 +173,70 @@ def safe_shap_explanation(model, img_array, class_idx):
     try:
         import shap
         
-        # Use a simpler, more stable explainer
-        # Create a background dataset (use the image itself as background for simplicity)
+        # Create a background dataset (use the image itself as background)
         background = img_array[:1]  # Use single image as background
         
-        # Use DeepExplainer or KernelExplainer for more stability
+        # Use GradientExplainer (more reliable for this use case)
         try:
-            # Try DeepExplainer first (more stable for CNNs)
-            explainer = shap.DeepExplainer(model, background)
-            shap_values = explainer.shap_values(img_array)
-        except:
-            # Fallback to GradientExplainer
             explainer = shap.GradientExplainer(model, background)
             shap_values = explainer.shap_values(img_array)
+        except Exception as e1:
+            # Fallback to DeepExplainer
+            try:
+                explainer = shap.DeepExplainer(model, background)
+                shap_values = explainer.shap_values(img_array)
+            except Exception as e2:
+                return None, f"SHAP explainer failed: {str(e1)}; {str(e2)}"
         
-        # Handle multi-class output
+        # Handle multi-class output - SHAP returns list of arrays for each class
         if isinstance(shap_values, list):
-            shap_values = shap_values[class_idx] if class_idx < len(shap_values) else shap_values[0]
+            # Select the SHAP values for the predicted class
+            if class_idx < len(shap_values):
+                shap_values = shap_values[class_idx]
+            else:
+                shap_values = shap_values[0]  # Fallback to first class
         
         # Process SHAP values for visualization
-        if len(shap_values.shape) == 4:  # (batch, height, width, channels)
-            shap_values = shap_values[0]  # Take first batch
+        # Handle different possible shapes
+        original_shape = shap_values.shape
         
-        if len(shap_values.shape) == 3:  # (height, width, channels)
-            shap_image = np.abs(shap_values).sum(axis=2)  # Sum across channels
+        # Case 1: 5D shape (batch, height, width, channels, classes) - unexpected but handle it
+        if len(shap_values.shape) == 5:
+            if class_idx < shap_values.shape[4]:
+                shap_values = shap_values[0, :, :, :, class_idx]  # (height, width, channels)
+            else:
+                shap_values = shap_values[0, :, :, :, 0]  # Fallback to first class
+        
+        # Case 2: 4D shape (batch, height, width, channels)
+        elif len(shap_values.shape) == 4:
+            shap_values = shap_values[0]  # Take first batch -> (height, width, channels)
+        
+        # Case 3: 3D shape (height, width, channels) - already correct
+        elif len(shap_values.shape) == 3:
+            pass  # Already in correct format
+        
+        # Case 4: 2D shape (height, width) - already processed
+        elif len(shap_values.shape) == 2:
+            return shap_values, None
+        
         else:
-            shap_image = np.abs(shap_values)
+            return None, f"Unexpected SHAP shape: {original_shape}"
+        
+        # Ensure we have 3D shape (height, width, channels) at this point
+        if len(shap_values.shape) != 3:
+            return None, f"SHAP values must be 3D after processing, got shape: {shap_values.shape}"
+        
+        # Sum across channels to get 2D heatmap
+        shap_image = np.abs(shap_values).sum(axis=2)
+        
+        # Ensure it's 2D
+        if len(shap_image.shape) != 2:
+            return None, f"SHAP image must be 2D, got shape: {shap_image.shape}"
         
         return shap_image, None
     except Exception as e:
-        return None, str(e)
+        import traceback
+        return None, f"SHAP explanation error: {str(e)}\n{traceback.format_exc()}"
 
 # ==================== MAIN APP ====================
 
